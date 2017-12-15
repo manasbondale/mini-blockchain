@@ -22,3 +22,24 @@ To install new packages, reinstall cygwin with setup.
 When selecting packages to install, select only bin as it is the final executable. src is the source code.
 For openssl, select openssl under net
 For cpp and make, select under devel : gcc-g++ , gdb , make
+
+Batch script to automate git backup
+//Following script is run once at start
+git init
+git remote add origin https://github.com/manasbondale/general.git
+git pull origin master
+
+//Following script creates backup
+git status //status
+git add -A //stages all changes
+git commit -m %RANDOM% //commits all changes with %RANDOM% message for commit
+git push -u origin master //pushes latest commit to online repository
+
+//Branching
+git branch apple //creates apple branch
+git checkout apple //switches to apple
+git add -A
+git commit -m %RANDOM% //this commit is in apple branch
+git checkout master //switch over to master
+git merge apple //merges apple's latest commit with master
+git branch -d apple //delete apple branch
