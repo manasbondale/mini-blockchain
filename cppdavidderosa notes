@@ -1,0 +1,109 @@
+a hash is stored as
+unsigned char txid[] = {0xAA, ....., 0xEE} // in little endien style which means that AA is the LSB and EE is the MSB
+
+Fixed data hash
+
+char message[]= "hello world";
+uint16_t prefix= 0x...;
+uint8_t suffix = 0x..;
+uint8_t digest[32];
+
+bbp_sha256(digest, (uint8_t *)message, strlen(message));
+
+bbp_sha256(digest, digest, 32); // alternatively i can write SHA256_DIGEST_LENGTH instead of 32
+
+these two statements gives us the hash256 output of message;
+
+in final packing, we will append the prefix and suffix to digest
+uint8_t ser[35];
+*(uint16_t *)(ser) = bbp_eint16(BBP_LITTLE, prefix);
+memcpy(ser+2, digest, 32);
+*(ser+2+32) = suffix ;
+
+uint8_t n8 = 0x73;
+uint16_t n16= 0x...;
+uint32_t = ...;
+uint64_t = ....;
+
+uint8_t ser[15];
+*ser = n8;
+*(uint16_t *)(ser+1) = bbp_eint16(BBP_LITTLE, n16); // bbp_eint16 function here enters data into ser in little endian fashion which is denoted by BBP_LITTLE
+*(uint32_t *)(ser+3 )= bbp_eint32(BBP_LITTLE, n32);
+*(uint64_t *)(ser+7) = bbp_eint64(BBP_LITTLE, n64);
+
+hence we have created a serial binary data of 15 bytes in ser (1+2+4+8)
+
+uint32_t n32 = 0x12345678;
+char str[] = "foobar";
+size_t str_len = 10;
+uint16_t n16 = 0x1234;
+
+size_t str_real_len = strlen(str);
+size_t str_pad_len = str_len - str_real_len;
+
+char ser[16];
+*(uint32_t *)(ser) = bbp_eint32(BBP_LITTLE, n32);
+memcpy(ser+4, str, str_real_len);
+if (str_pad_len>0) {
+memset(ser+4+str_real_len, '\0', str_pad_len); //'\0' is equivalent to the byte 0x00
+}
+*(uint16_t *)(ser+4+str_len) = bbp_eint16(BBP_LITTLE, n16);
+
+above code creates a fixed length string data of 16 bytes (4 +10+2)
+
+typedef enum{
+BBP_VARINT16 = 0xfd; //precedes data of 16 bits
+BBP_VARINT32 = 0xfe; //precedes data of 32 bits
+BBP_VARINT64 = 0xff; //precedes data of 64 bits
+} bbp_varint_t;
+
+This is for variable input or variable data length serialization. To represent 0xfd 0xfe 0xff as data themselves we use 16 bit format like 0xfd 0x00 0xfe where the first byte indicated length of data ahead
+
+typedef struct{
+uint16_t fixed1;
+uint64_t var2;
+uint32_t fixed3;
+uint8_t fixed4;
+} foo_t;
+
+foo_t decoded; size_t varlen;
+decoded.fixed1 = bbp_eint16(BBP_LITTLE, *(uint16_t *)bytes);
+decoded.var2 = bbp_varint_get(bytes+2, &varlen); //bbp_varint_get takes variable length data from bytes+2 and puts it in var2 and puts the size of data extracted in varlen
+decoded.fixed3 = bbp_eint32(BBP_LITTLE, *(uint32_t *)(bytes+2+varlen));
+decoded.fixed4 = *(bytes+2+varlen+4);
+
+the above code serializes variable data
+
+size_t len;
+size_t varlen;
+uint8_t data[100]= {0};
+len = bbp_varint_get(bytes, &varlen);
+memcpy(data, bytes+varlen, len);
+
+this deserializes serial variable data into data[100]
+
+keys as properties
+
+bitcoin uses PKC that is public key cryptography
+public key for receiving and representing
+private key for verification and paying
+
+elliptic curves are : connected non singular projectile curves with genus 1. genus one roughly means 'one hole in the graph'.
+y-squared = x-cubed + bx + a
+
+bitcoin uses PKC based on elliptic curves for
+key generation
+signing
+sign verification
+
+Signatures are used for verification of a transaction by a third party (miners).
+A certain elliptic curve C is agreed upon beforehand
+signing:
+digest = H(message); //hash function
+signature = ec_sign(C, digest, private key);
+
+verifying:
+digest = H(message);
+is_auth = ec_verify(C, digest, signature, public key);
+
+ec_* functions involved elliptic curve mathematics/algorithms.

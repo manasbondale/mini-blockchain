@@ -4,7 +4,7 @@ For header files :
 //your code
 #endif
 
--Prevents recursive and double inclusion
+-Prevents recursive and double inclusion, are called include guards
 
 command line:
 
