@@ -137,3 +137,27 @@ To manually convert 65 byte uncompressed pub key to compressed form - omit y coo
 
 openssl commandline for decoding public key from file to compressed form
 $openssl ec -in ec-pub.pem -pubin -text -out ec-pub.pem_in_raw_hexes_uncompressed -conv_form compressed
+
+Generating a key from code
+
+function in ec.h
+EC_KEY *bbp_ec_new_keypair(const uint8_t *priv_bytes);
+
+Openssl data structures :
+BN_CTX BIGNUM help with precision arithmetics involving very large numbers
+EC_KEY is a key pair or just a public key
+EC_GROUP EC_POINT help get public key from private
+
+key = EC_KEY_new_by_curve_name(NID_secp256k1); //creating an empty key
+
+
+BN_init(&priv); //creating a BIGNUM priv
+BN_bin2bn(priv_bytes, 32, &priv); //converting priv_bytes to BIGNUM form in priv
+EC_KEY_set_private_key(key, &priv); //entering priv into key
+
+ECDSA Elliptic Curve Digital Signature Algorithm
+private key + message/data = signature
+signature + hashfunction + public key = verified!
+
+openssl commandline for signing the sha256 digest of a message/data/file with the private key.
+$openssl dgst -sign ec-priv.pem ex-messages.txt >ex-signature.der

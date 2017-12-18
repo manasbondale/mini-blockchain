@@ -15,7 +15,9 @@ shell command : cpan -i Text::Template (installed the perl module text template,
 Before attempting anything, google for shortcuts at least five times!!!
 
 Openssl
-Finally installed openssl using cygwin64.
+Finally installed openssl using cygwin64. Used for:
+-Transport Layer Security (TLS)
+-Secure Sockets Layer (SSL)
 
 Cygwin
 To install new packages, reinstall cygwin with setup.
