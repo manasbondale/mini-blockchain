@@ -1,0 +1,10 @@
+Private-Key: (256 bit)
+pub: 
+    03:02:3c:83:e7:a7:52:0e:c8:30:98:bc:06:3c:c8:
+    88:b2:e6:87:53:58:ba:96:77:8f:18:97:04:70:bb:
+    a1:86:bb
+ASN1 OID: secp256k1
+-----BEGIN PUBLIC KEY-----
+MDYwEAYHKoZIzj0CAQYFK4EEAAoDIgADAjyD56dSDsgwmLwGPMiIsuaHU1i6lneP
+GJcEcLuhhrs=
+-----END PUBLIC KEY-----

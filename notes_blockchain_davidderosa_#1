@@ -107,3 +107,33 @@ digest = H(message);
 is_auth = ec_verify(C, digest, signature, public key);
 
 ec_* functions involved elliptic curve mathematics/algorithms.
+
+private keys are 32 bytes long
+public keys are 64 bytes long in uncompressed form and 32 long in compressed form. Both forms include an additional byte as a prefix
+the elliptic curve used is secp256k1 curve
+ec crypto is based on modular arithmetic
+
+openssl commandline for generating private key
+$openssl ecparam -name secp256k1 -genkey -out ec-priv.pem
+// ec-priv.pem is the name of the outfile containing randomly generated private key
+
+openssl commandline for decoding private key file to raw hexes text
+$openssl ec -in ec-priv.pem -text -noout
+
+Public keys are two 32-byte numbers which represent the (x,y) coordinate on the elliptic curve. The uncompressed form also includes a single byte prefix making a total of 65 bytes.
+The (x,y) can be pointed to using the private key but not vice versa.
+The compressed form simply omits the y coordinate of the public key and is hence 32 bytes plus one for prefix.
+
+openssl commandline for obtaining public key file from private key file
+$openssl ec -in ec-priv.pem -pubout -out ec-pub.pem
+//Here ec-priv.pem is the private key and ec-pub.pem is the output public key
+
+
+openssl commandline for decoding public key from .pem file to uncompressed form
+$openssl ec -in ec-pub.pem -pubin -text -out ec-pub.pem_in_raw_hexes
+//Prefix is 04 in uncompressed form. The raw hexes of the pubkey starts with the prefix, followed by x of 32 bytes and then y of 32 bytes.
+
+To manually convert 65 byte uncompressed pub key to compressed form - omit y coordinate's 32 bytes and change the prefix 04 to 02 if y coordinate ends in even number or 03 if y coordinate ends in odd number.
+
+openssl commandline for decoding public key from file to compressed form
+$openssl ec -in ec-pub.pem -pubin -text -out ec-pub.pem_in_raw_hexes_uncompressed -conv_form compressed
