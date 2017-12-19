@@ -255,8 +255,14 @@ Base58 is serialized big endian
 
 Wallet Import Format WIF
 Prepend 80 for Mainnet and ef for Testnet3
-Append 01 if key corresponds to compressed public key
+Append 01 if the corresponding public key is in compressed form
 Encode to Base58check
+
+Sample private key
+16 26 07 83 e4 0b 16 73
+16 73 62 2a c8 a5 b0 45
+fc 3e a4 af 70 f7 27 f3
+f9 e9 2b dd 3a 1d dc 42
 
 1. Prepend ef
 ef
@@ -278,7 +284,7 @@ f9 e9 2b dd 3a 1d dc 42
 a9 2a 1a 92 7d 33 7b 2a
 4. First four bytes
 35 06 7f 25
-4. Append first four bytes of 3. to 2.
+5. Append first four bytes of 3. to 2.
 ef
 16 26 07 83 e4 0b 16 73
 16 73 62 2a c8 a5 b0 45
@@ -286,5 +292,57 @@ fc 3e a4 af 70 f7 27 f3
 f9 e9 2b dd 3a 1d dc 42
 01
 35 06 7f 25
-5. Encode to Base58
+6. Encode to Base58
 cNKkmrwHuShs2mvkVEKfXULxXhxRo3yy1cK6sq62uBp2Pc8Lsa76
+
+WIF are therefore 38 bytes long
+
+Addresses
+PSPKH Pay to Public Key Hash
+
+Base58check of P2PKH
+Mainnet 00    Testnet3 6f
+
+Sample public key in compressed form
+02
+82 00 6e 93 98 a6 98 6e
+da 61 fe 91 67 4c 3a 10
+8c 39 94 75 bf 1e 73 8f
+19 df c2 db 11 db 1d 28
+
+1. Hash160 of public key
+6b f1 9e 55 f9 4d 98 6b
+46 40 c1 54 d8 64 69 93
+41 91 95 11
+2. Prepend 6f for Testnet3 or 00 for Mainnet
+6f
+6b f1 9e 55 f9 4d 98 6b
+46 40 c1 54 d8 64 69 93
+41 91 95 11
+3. Hash256 of step 2
+41 7c 62 6a 31 b5 9b 6e
+1a 0b 7f 30 36 e6 d3 49
+26 61 20 cf cc e6 9b 46
+69 ac a8 7f ff a9 e1 21
+4. Get first four bytes of step 3
+41 7c 62 6a
+5. Append first four bytes of 3 to 2
+6f
+6b f1 9e 55 f9 4d 98 6b
+46 40 c1 54 d8 64 69 93
+41 91 95 11
+41 7c 62 6a
+6. Encode to Base58
+mqMi3XYqsPvBWtrJTk8euPWDVmFTZ5jHuK
+
+PSPKH are of 25 bytes = 1 byte for version + 20 bytes of hash160 + 4 bytes of checksum
+
+A single private key will yield two different P2PKH addresses each corresponding to the compressed and uncompressed version of the public key
+This may cause ambiguity in validating a transaction
+
+Magic prefix due to Base58 encoding
+Data Version Magic-prefixes
+Mainnet keys 80  5, K, L
+Testnet3 keys ef 9, c
+Mainnet addresses 1
+Testnet3 keys m, n
