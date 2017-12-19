@@ -160,4 +160,131 @@ private key + message/data = signature
 signature + hashfunction + public key = verified!
 
 openssl commandline for signing the sha256 digest of a message/data/file with the private key.
-$openssl dgst -sign ec-priv.pem ex-messages.txt >ex-signature.der
+$openssl dgst -sha256 -sign ec-priv.pem ex-messages.txt >ex-signature.der
+
+Format of signature is not deterministic. The same signature does not output everytime the above commandline is run.
+This leads to transaction  malleability : which means a single valid transaction has multiple different tx id related to each different signature.
+
+To display hex-coded signature :
+$openssl dgst -sha256 -hex -sign ec-priv.pem ex-messages.txt
+
+To verify signature using public key and message :
+$openssl dgst -sha256 -verify ec-pub.pem -signature ec-signature.der ex-messages.txt
+//Output : Verified OK
+
+Verifying code translation
+
+uint8_t priv_bytes[32]={...}
+const char message[] = "This is a confidential message\n";
+
+EC_KEY *key;
+uint8_t digest[32];
+ECDSA_SIG *signature;
+uint8_t *der, *der_copy;
+size_t der_len;
+key = bbp_ec_new_keypair(priv_bytes);
+bbp_sha256(digest, (uint8_t *)message, strlen(message));
+signature = ECDSA_do_sign(digest, sizeof(digest), key);
+
+struct {
+BIGNUM *r;
+BIGNUM *s;
+} ECDSA_SIG;
+
+der_len = ECDSA_size(size);
+der= calloc(der_len, sizeof(uint8_t));
+der_copy=der;
+i2d_ECDSA_SIG(signature, &der_copy);
+
+uint8_t pub_bytes[32] ={...};
+uint8_t der_bytes[]={...};
+const char message[] = "this is a very confidential message\n";
+
+EC_KEY *key;
+const uint8_t *der_bytes_copy;
+ECDSA_SIG *signature;
+uint8_t digest[32];
+int verified;
+...
+key=bbp_ec_new_pubkey(pub_bytes);
+der_bytes_copy = der_bytes;
+signature = d2i_ECDSA_SIG(NULL, &der_bytes_copy, sizeof(der_len));
+
+helper function to get compressed form of public key
+EC_KEY *bbp_ec_new_pubkey(const uint8_t* pub_bytes, size_t pub_len);
+
+bbp_sha256(digest, (uint8_t *)message, strlen(message));
+verified = ECDSA_do_verify(digest, sizeof(digest), signature, key);
+
+ECDSA_do_verify returns 1 if valid, 0 if invalid, -1 if unexpected error occured.
+
+Network Interoperability
+Mainnet is where all the real bitcoins are
+Testnet3 is a testing p2p network Testnet3 coins are worthless
+Regression Test or Regtest network is a local mining mode where private, customized bitcoin-style blockchains are operated with negligible processing power.
+
+Mainnet TCP port: 8333 prefix : f9 be b4 d9
+Testnet3 TCP port: 18333 prefix : 0b 11 09 07
+
+Transactions and blockchain bare no information about the network they belong to.
+User keys and addresses bare a magic prefix that indicates which network they are communicating in.
+A transaction can be published to both Mainnet and Testnet3
+
+Base58 is a stripped down version of Base64 which is widely used scheme for displaying ASCII.
+Base58 has only alphanumeric characters.
+Base58 excludes 0OIl
+They are fully selectable with a double click
+
+Base58 alphabet
+value character
+0 1
+... 0 excluded
+8 9
+9 A
+... I and O excluded
+32 Z
+33 a
+... l excluded
+57 z
+
+Base58check
+Base58 are long and unfriendly strings. A checksum suffix is appended to avoid typos.
+The checksum is the first four bytes of hash256(Base58-payload)
+Base58check is payload+checksum
+Base58 is serialized big endian
+
+Wallet Import Format WIF
+Prepend 80 for Mainnet and ef for Testnet3
+Append 01 if key corresponds to compressed public key
+Encode to Base58check
+
+1. Prepend ef
+ef
+16 26 07 83 e4 0b 16 73
+16 73 62 2a c8 a5 b0 45
+fc 3e a4 af 70 f7 27 f3
+f9 e9 2b dd 3a 1d dc 42
+2. Append 01
+ef
+16 26 07 83 e4 0b 16 73
+16 73 62 2a c8 a5 b0 45
+fc 3e a4 af 70 f7 27 f3
+f9 e9 2b dd 3a 1d dc 42
+01
+3. Generate hash256
+35 06 7f 25 1e 07 d0 2b
+59 ca f4 cc 77 36 20 7d
+73 0d 21 88 f9 62 8f 47
+a9 2a 1a 92 7d 33 7b 2a
+4. First four bytes
+35 06 7f 25
+4. Append first four bytes of 3. to 2.
+ef
+16 26 07 83 e4 0b 16 73
+16 73 62 2a c8 a5 b0 45
+fc 3e a4 af 70 f7 27 f3
+f9 e9 2b dd 3a 1d dc 42
+01
+35 06 7f 25
+5. Encode to Base58
+cNKkmrwHuShs2mvkVEKfXULxXhxRo3yy1cK6sq62uBp2Pc8Lsa76
