@@ -4,4 +4,6 @@ A miniature blockchain that follows the underlying principles of blockchain mini
 
 # Written entirely in Cpp
 
-Use ```g++ main.cpp```
+Use 
+```g++ main.cpp Block.cpp Blockchain.cpp sha256.cpp -o blockchain && ./blockchain```
+to run the program.
